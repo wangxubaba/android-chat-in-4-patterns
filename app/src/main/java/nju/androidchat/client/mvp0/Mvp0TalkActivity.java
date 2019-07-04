@@ -20,6 +20,8 @@ import lombok.extern.java.Log;
 import nju.androidchat.client.ClientMessage;
 import nju.androidchat.client.R;
 import nju.androidchat.client.Utils;
+import nju.androidchat.client.component.ItemImageReceive;
+import nju.androidchat.client.component.ItemImageSend;
 import nju.androidchat.client.component.ItemTextReceive;
 import nju.androidchat.client.component.ItemTextSend;
 import nju.androidchat.client.component.OnRecallMessageRequested;
@@ -57,11 +59,26 @@ public class Mvp0TalkActivity extends AppCompatActivity implements Mvp0Contract.
                     // 增加ItemText
                     for (ClientMessage message : messages) {
                         String text = String.format("%s", message.getMessage());
+                        boolean isPic=picURL(text);
+                        String url="";
+                        if(isPic){
+                            url=text.substring(text.indexOf('(')+1,text.length()-1);
+                        }
                         // 如果是自己发的，增加ItemTextSend
                         if (message.getSenderUsername().equals(this.presenter.getUsername())) {
-                            content.addView(new ItemTextSend(this, text, message.getMessageId(), this));
+                            if(isPic){
+                                content.addView(new ItemImageSend(this,url,message.getMessageId(),this));
+                            }
+                            else {
+                                content.addView(new ItemTextSend(this, text, message.getMessageId(), this));
+                            }
                         } else {
-                            content.addView(new ItemTextReceive(this, text, message.getMessageId()));
+                            if(isPic){
+                                content.addView(new ItemImageReceive(this,url,message.getMessageId()));
+                            }
+                            else{
+                                content.addView(new ItemTextReceive(this, text, message.getMessageId()));
+                            }
                         }
                     }
 
@@ -114,5 +131,24 @@ public class Mvp0TalkActivity extends AppCompatActivity implements Mvp0Contract.
     @Override
     public void onRecallMessageRequested(UUID messageId) {
 
+    }
+
+    private boolean picURL(String text){
+        if(text.length()>0 && text.charAt(0)=='!'){
+            text=text.substring(1);
+            if(text.length()>0 && text.indexOf('[')!=-1){
+                text=text.substring(text.indexOf('[')+1);
+                if(text.length()>0 && text.indexOf(']')!=-1){
+                    text=text.substring(text.indexOf(']')+1);
+                    if(text.length()>0 && text.indexOf('(')!=-1){
+                        text=text.substring(text.indexOf('(')+1);
+                        if(text.length()>0 && text.charAt(text.length()-1)==')'){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
